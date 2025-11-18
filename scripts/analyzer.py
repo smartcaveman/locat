@@ -125,8 +125,28 @@ def process_repository(repo_id):
     except requests.exceptions.RequestException as e:
         print(f"Error processing repo ID {repo_id}: {e}", file=sys.stderr)
         if e.response and e.response.status_code == 403:
-            print("Rate limit likely exceeded. Waiting...", file=sys.stderr)
-            time.sleep(60) # Wait for a minute before retrying
+            # Check for rate limit in headers or body
+            rate_limit_remaining = e.response.headers.get("X-RateLimit-Remaining")
+            if rate_limit_remaining == "0":
+                print("GitHub API rate limit exceeded. Waiting before retrying...", file=sys.stderr)
+                reset_time = e.response.headers.get("X-RateLimit-Reset")
+                if reset_time:
+                    wait_time = max(0, int(reset_time) - int(time.time())) + 5
+                    print(f"Waiting for {wait_time} seconds until rate limit resets...", file=sys.stderr)
+                    time.sleep(wait_time)
+                else:
+                    time.sleep(60) # Fallback wait
+            else:
+                # Try to get a more specific error message from the response body
+                try:
+                    error_json = e.response.json()
+                    message = error_json.get("message", "")
+                except Exception:
+                    message = ""
+                if message:
+                    print(f"403 Forbidden: {message}", file=sys.stderr)
+                else:
+                    print("403 Forbidden: Access denied or insufficient permissions.", file=sys.stderr)
         return False
 
 def main():
