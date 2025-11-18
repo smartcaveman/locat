@@ -42,7 +42,7 @@ The script will test these hypotheses against the collected sample data.
 3.  **Run the Analyzer:**
 
     ```bash
-    python analyzer.py
+    python scripts/analyzer.py
     ```
 
 The script will print its progress and the final statistical results to the console.
