@@ -4,6 +4,7 @@ import random
 import sys
 import time
 import xxhash
+import base64
 from statistics import mean
 
 # --- Configuration & Hypotheses ---
@@ -101,19 +102,29 @@ def process_repository(repo_id):
             blob_response.raise_for_status()
 
             # Per-file rate limiting: check remaining requests and sleep if low
-            remaining = int(blob_response.headers.get("X-RateLimit-Remaining", "1"))
-            if remaining < 10:
-                reset_time = int(blob_response.headers.get("X-RateLimit-Reset", "0"))
-                sleep_for = max(reset_time - int(time.time()), 1)
-                print(f"  - Rate limit low ({remaining} left). Sleeping for {sleep_for} seconds.")
-                time.sleep(sleep_for)
+            remaining_header = blob_response.headers.get("X-RateLimit-Remaining")
+            if remaining_header is not None:
+                remaining = int(remaining_header)
+                if remaining < 10:
+                    reset_time_header = blob_response.headers.get("X-RateLimit-Reset")
+                    if reset_time_header is not None:
+                        reset_time = int(reset_time_header)
+                        sleep_for = max(reset_time - int(time.time()), 1)
+                        print(f"  - Rate limit low ({remaining} left). Sleeping for {sleep_for} seconds.")
+                        time.sleep(sleep_for)
+                    else:
+                        # If reset time is not available, use a conservative fallback
+                        print(f"  - Rate limit low ({remaining} left), but reset time unavailable. Sleeping for 60 seconds.")
+                        time.sleep(60)
+                else:
+                    time.sleep(0.5)  # Throttle per file to avoid hitting rate limits
             else:
-                time.sleep(0.5)  # Throttle per file to avoid hitting rate limits
+                # If rate limit headers are not present, use conservative throttling
+                time.sleep(0.5)
             
             # This is a simplified way to decode, which might fail for some binary files.
             try:
                 decoded_content = blob_response.json()['content']
-                import base64
                 decoded_content = base64.b64decode(decoded_content).decode('utf-8', 'ignore')
             except Exception:
                 print(f"  - Skipping file {file_item['path']} (binary or unknown encoding)")
