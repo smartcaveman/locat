@@ -135,27 +135,27 @@ def main():
         print("Error: GITHUB_TOKEN environment variable is not set.", file=sys.stderr)
         sys.exit(1)
 
-    repo_ids_to_sample = sorted(random.sample(range(1, MAX_REPO_ID + 1), SAMPLE_SIZE))
-
     print(f"--- Starting GitHub Uniqueness Analyzer ---")
     print(f"Target sample size: {SAMPLE_SIZE} repositories")
 
     successful_samples = 0
-    for repo_id in repo_ids_to_sample:
-        if successful_samples >= SAMPLE_SIZE:
-            break
-            
+    attempted_repo_ids = set()
+    while successful_samples < SAMPLE_SIZE:
+        # Randomly select a repo ID that hasn't been tried yet
+        repo_id = random.randint(1, MAX_REPO_ID)
+        if repo_id in attempted_repo_ids:
+            continue
+        attempted_repo_ids.add(repo_id)
+
         rate_limit_info = get_rate_limit()
         if rate_limit_info and rate_limit_info["remaining"] < 100:
             reset_time = rate_limit_info['reset']
             wait_time = max(0, reset_time - time.time()) + 10
             print(f"Approaching rate limit. Waiting for {wait_time:.0f} seconds...")
             time.sleep(wait_time)
-        
+
         if process_repository(repo_id):
-            successful_samples +=1
-
-
+            successful_samples += 1
     print(f"\n--- Analysis Complete ---")
     print(f"Successfully processed {processed_repo_count} / {SAMPLE_SIZE} target repositories.")
 
