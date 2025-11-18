@@ -99,6 +99,16 @@ def process_repository(repo_id):
             blob_url = f"https://api.github.com/repos/{owner}/{repo}/git/blobs/{file_sha}"
             blob_response = requests.get(blob_url, headers=HEADERS)
             blob_response.raise_for_status()
+
+            # Per-file rate limiting: check remaining requests and sleep if low
+            remaining = int(blob_response.headers.get("X-RateLimit-Remaining", "1"))
+            if remaining < 10:
+                reset_time = int(blob_response.headers.get("X-RateLimit-Reset", "0"))
+                sleep_for = max(reset_time - int(time.time()), 1)
+                print(f"  - Rate limit low ({remaining} left). Sleeping for {sleep_for} seconds.")
+                time.sleep(sleep_for)
+            else:
+                time.sleep(0.5)  # Throttle per file to avoid hitting rate limits
             
             # This is a simplified way to decode, which might fail for some binary files.
             try:
