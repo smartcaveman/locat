@@ -45,10 +45,13 @@ class RepositoryScanner:
         Returns:
             Tuple of (owner, repo_name)
         """
-        # Handle full URLs
-        if "github.com" in repo_identifier:
+        # Handle full URLs - check for github.com as the domain
+        if repo_identifier.startswith(
+            "https://github.com/"
+        ) or repo_identifier.startswith("http://github.com/"):
             parts = repo_identifier.rstrip("/").split("/")
-            return parts[-2], parts[-1].replace(".git", "")
+            if len(parts) >= 5:  # https://github.com/owner/repo
+                return parts[-2], parts[-1].replace(".git", "")
 
         # Handle owner/repo format
         parts = repo_identifier.split("/")
