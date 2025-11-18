@@ -19,6 +19,11 @@ SAMPLE_SIZE = 1000
 # As of late 2024, this is well over 500 million.
 MAX_REPO_ID = 500_000_000
 
+# Rate limiting configuration
+RATE_LIMIT_THRESHOLD = 10  # Minimum remaining requests before sleeping
+THROTTLE_DELAY = 0.5  # Seconds to wait between file requests
+MAX_RATE_LIMIT_SLEEP = 3600  # Maximum seconds to sleep for rate limit (1 hour)
+
 # Our Null Hypotheses (H₀)
 H0_MEAN_FILES_PER_REPO = 150
 H0_MEAN_LOC_PER_FILE = 120
@@ -104,23 +109,34 @@ def process_repository(repo_id):
             # Per-file rate limiting: check remaining requests and sleep if low
             remaining_header = blob_response.headers.get("X-RateLimit-Remaining")
             if remaining_header is not None:
-                remaining = int(remaining_header)
-                if remaining < 10:
-                    reset_time_header = blob_response.headers.get("X-RateLimit-Reset")
-                    if reset_time_header is not None:
-                        reset_time = int(reset_time_header)
-                        sleep_for = max(reset_time - int(time.time()), 1)
-                        print(f"  - Rate limit low ({remaining} left). Sleeping for {sleep_for} seconds.")
-                        time.sleep(sleep_for)
+                try:
+                    remaining = int(remaining_header)
+                    if remaining < RATE_LIMIT_THRESHOLD:
+                        reset_time_header = blob_response.headers.get("X-RateLimit-Reset")
+                        if reset_time_header is not None:
+                            try:
+                                reset_time = int(reset_time_header)
+                                sleep_for = max(reset_time - int(time.time()), 1)
+                                # Cap sleep time to prevent excessive waits due to clock skew or invalid data
+                                sleep_for = min(sleep_for, MAX_RATE_LIMIT_SLEEP)
+                                print(f"  - Rate limit low ({remaining} left). Sleeping for {sleep_for} seconds.")
+                                time.sleep(sleep_for)
+                            except (ValueError, OverflowError):
+                                # If reset time is invalid, use a conservative fallback
+                                print(f"  - Rate limit low ({remaining} left), but reset time invalid. Sleeping for 60 seconds.")
+                                time.sleep(60)
+                        else:
+                            # If reset time is not available, use a conservative fallback
+                            print(f"  - Rate limit low ({remaining} left), but reset time unavailable. Sleeping for 60 seconds.")
+                            time.sleep(60)
                     else:
-                        # If reset time is not available, use a conservative fallback
-                        print(f"  - Rate limit low ({remaining} left), but reset time unavailable. Sleeping for 60 seconds.")
-                        time.sleep(60)
-                else:
-                    time.sleep(0.5)  # Throttle per file to avoid hitting rate limits
+                        time.sleep(THROTTLE_DELAY)  # Throttle per file to avoid hitting rate limits
+                except (ValueError, OverflowError):
+                    # If remaining header is invalid, use conservative throttling
+                    time.sleep(THROTTLE_DELAY)
             else:
                 # If rate limit headers are not present, use conservative throttling
-                time.sleep(0.5)
+                time.sleep(THROTTLE_DELAY)
             
             # This is a simplified way to decode, which might fail for some binary files.
             try:
