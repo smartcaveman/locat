@@ -14,6 +14,29 @@ TABLES = {
     "source": "sources",
     "estimate": "source_magnitude_estimates",
 }
+WRITABLE_COLUMNS = {
+    "source_categories": {"slug", "name", "description", "discovery_procedure"},
+    "artifact_schemas": {"name", "version", "artifact_model", "traversal_protocol", "notes"},
+    "sources": {
+        "category_id",
+        "schema_id",
+        "name",
+        "base_url",
+        "discovery_procedure",
+        "crawl_notes",
+        "active",
+    },
+    "source_magnitude_estimates": {
+        "source_id",
+        "metric_name",
+        "metric_value",
+        "metric_unit",
+        "estimate_kind",
+        "provenance",
+        "source_url",
+        "observed_on",
+    },
+}
 
 
 def connect(database):
@@ -30,6 +53,13 @@ def parse_fields(field_values):
         if not separator or not key:
             raise argparse.ArgumentTypeError("Fields must use KEY=VALUE format.")
         fields[key] = value
+    return fields
+
+
+def validate_fields(table, fields):
+    invalid_columns = set(fields) - WRITABLE_COLUMNS[table]
+    if invalid_columns:
+        raise SystemExit(f"Unknown or non-writable column(s): {', '.join(sorted(invalid_columns))}.")
     return fields
 
 
@@ -107,9 +137,9 @@ def main():
         elif args.command == "get":
             get_record(connection, table, args.id)
         elif args.command == "add":
-            add_record(connection, table, parse_fields(args.fields))
+            add_record(connection, table, validate_fields(table, parse_fields(args.fields)))
         elif args.command == "update":
-            update_record(connection, table, args.id, parse_fields(args.fields))
+            update_record(connection, table, args.id, validate_fields(table, parse_fields(args.fields)))
         else:
             delete_record(connection, table, args.id)
 
