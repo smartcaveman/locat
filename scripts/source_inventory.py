@@ -57,19 +57,27 @@ def parse_fields(field_values):
 
 
 def validate_fields(table, fields):
+    validate_table(table)
     invalid_columns = set(fields) - WRITABLE_COLUMNS[table]
     if invalid_columns:
         raise SystemExit(f"Unknown or non-writable column(s): {', '.join(sorted(invalid_columns))}.")
     return fields
 
 
+def validate_table(table):
+    if table not in TABLES.values():
+        raise ValueError(f"Unsupported table: {table}")
+
+
 def list_records(connection, table):
+    validate_table(table)
     rows = connection.execute(f"SELECT * FROM {table} ORDER BY id").fetchall()
     for row in rows:
         print(dict(row))
 
 
 def get_record(connection, table, record_id):
+    validate_table(table)
     row = connection.execute(f"SELECT * FROM {table} WHERE id = ?", (record_id,)).fetchone()
     if row is None:
         raise SystemExit(f"No {table} record exists with id {record_id}.")
@@ -77,6 +85,7 @@ def get_record(connection, table, record_id):
 
 
 def add_record(connection, table, fields):
+    fields = validate_fields(table, fields)
     if not fields:
         raise SystemExit("At least one field is required.")
     columns = ", ".join(fields)
@@ -89,6 +98,7 @@ def add_record(connection, table, fields):
 
 
 def update_record(connection, table, record_id, fields):
+    fields = validate_fields(table, fields)
     if not fields:
         raise SystemExit("At least one field is required.")
     assignments = ", ".join(f"{column} = ?" for column in fields)
@@ -102,6 +112,7 @@ def update_record(connection, table, record_id, fields):
 
 
 def delete_record(connection, table, record_id):
+    validate_table(table)
     cursor = connection.execute(f"DELETE FROM {table} WHERE id = ?", (record_id,))
     if cursor.rowcount == 0:
         raise SystemExit(f"No {table} record exists with id {record_id}.")
@@ -137,9 +148,9 @@ def main():
         elif args.command == "get":
             get_record(connection, table, args.id)
         elif args.command == "add":
-            add_record(connection, table, validate_fields(table, parse_fields(args.fields)))
+            add_record(connection, table, parse_fields(args.fields))
         elif args.command == "update":
-            update_record(connection, table, args.id, validate_fields(table, parse_fields(args.fields)))
+            update_record(connection, table, args.id, parse_fields(args.fields))
         else:
             delete_record(connection, table, args.id)
 
