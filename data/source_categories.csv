@@ -1,0 +1,8 @@
+slug,name,description,discovery_procedure
+git-hosting,Git hosting,Public hosted Git repositories,Use public platform directories APIs and search indexes to discover instances.
+package-registry,Package registry,Package indexes that distribute source archives or source-bearing packages,Use registry catalogs feeds and package search APIs.
+notebook-hosting,Notebook hosting,Hosted computational notebooks and notebook galleries,Use public galleries profile indexes and platform search APIs.
+online-ide,Online IDE and fiddle,Public browser IDE projects snippets and executable demos,Use public project indexes search endpoints and sitemap discovery.
+code-demo,Code demo hosting,Public code-included interactive demos,Use public gallery APIs search endpoints and sitemap discovery.
+technical-publishing,Technical publishing,Technical blogs documentation and article sites containing code blocks,Discover domains through curated lists feeds sitemaps and web search.
+discussion-forum,Discussion forum,Public message boards and Q&A posts containing code blocks,Use public APIs data dumps site maps and topic search.

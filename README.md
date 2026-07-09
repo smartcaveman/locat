@@ -46,3 +46,36 @@ The script will test these hypotheses against the collected sample data.
     ```
 
 The script will print its progress and the final statistical results to the console.
+
+## Source Inventory
+
+The source inventory tracks crawl targets, their host category, the artifact schema
+that describes their code-bearing resources, discovery procedures, and magnitude
+estimates. It uses only Python's standard library and SQLite.
+
+Create and seed a local database from the versioned CSV inventories:
+
+```bash
+python scripts/init_source_inventory.py --database source_inventory.sqlite
+```
+
+The seed data is maintained in:
+
+- `data/source_categories.csv`
+- `data/artifact_schemas.csv`
+- `data/sources.csv`
+
+Use the CRUD CLI to inspect or maintain records:
+
+```bash
+python scripts/source_inventory.py --database source_inventory.sqlite list source
+python scripts/source_inventory.py --database source_inventory.sqlite get category 1
+python scripts/source_inventory.py --database source_inventory.sqlite add category \
+  slug=example name=Example description="Example hosts" \
+  discovery_procedure="Use its public directory"
+python scripts/source_inventory.py --database source_inventory.sqlite update source 1 active=0
+python scripts/source_inventory.py --database source_inventory.sqlite delete estimate 1
+```
+
+Fields passed to `add` and `update` must be SQLite column names in `KEY=VALUE`
+form. `source_inventory.sql` is the standalone database creation script.
