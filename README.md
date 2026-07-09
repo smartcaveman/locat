@@ -63,6 +63,7 @@ The seed data is maintained in:
 
 - `data/source_categories.csv`
 - `data/artifact_schemas.csv`
+- `data/category_schemas.csv`
 - `data/sources.csv`
 
 Use the CRUD CLI to inspect or maintain records:

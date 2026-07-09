@@ -38,23 +38,14 @@ def seed(connection):
             row,
         )
 
-    for row in read_csv("source_categories.csv"):
-        schema_name = {
-            "git-hosting": "git-repository",
-            "package-registry": "package-release",
-            "notebook-hosting": "notebook",
-            "online-ide": "online-project",
-            "code-demo": "online-project",
-            "technical-publishing": "web-page-code-blocks",
-            "discussion-forum": "forum-post-code",
-        }[row["slug"]]
+    for row in read_csv("category_schemas.csv"):
         connection.execute(
             """INSERT INTO category_schemas (category_id, schema_id, is_default)
                VALUES (
                  (SELECT id FROM source_categories WHERE slug = ?),
                  (SELECT id FROM artifact_schemas WHERE name = ?), 1)
                ON CONFLICT(category_id, schema_id) DO UPDATE SET is_default = 1""",
-            (row["slug"], schema_name),
+            (row["category_slug"], row["schema_name"]),
         )
 
     for row in read_csv("sources.csv"):

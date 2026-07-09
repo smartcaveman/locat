@@ -6,3 +6,8 @@ online-ide,Online IDE and fiddle,Public browser IDE projects snippets and execut
 code-demo,Code demo hosting,Public code-included interactive demos,Use public gallery APIs search endpoints and sitemap discovery.
 technical-publishing,Technical publishing,Technical blogs documentation and article sites containing code blocks,Discover domains through curated lists feeds sitemaps and web search.
 discussion-forum,Discussion forum,Public message boards and Q&A posts containing code blocks,Use public APIs data dumps site maps and topic search.
+code-snippet,Code snippet and paste hosting,Public code fragments hosted without a full project or repository structure,Use public snippet feeds profile indexes and search endpoints.
+academic-research-code,Academic research code,Research software and analysis scripts deposited with scholarly outputs,Enumerate metadata APIs and filter deposits whose resource type is software or code.
+code-archive,Source code archive,Long-term archives that preserve public source code from many primary hosts,Enumerate archive origin catalogs and content-addressed APIs.
+model-hub,Model and ML code hub,Machine learning repositories that include source files notebooks or executable application spaces,Use public hub APIs and repository search endpoints.
+extension-marketplace,Extension marketplace,Public browser editor and IDE extensions distributed as code-bearing archives,Use marketplace catalogs and version package download APIs.

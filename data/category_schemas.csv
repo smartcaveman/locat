@@ -1,0 +1,13 @@
+category_slug,schema_name
+git-hosting,git-repository
+package-registry,package-release
+notebook-hosting,notebook
+online-ide,online-project
+code-demo,online-project
+technical-publishing,web-page-code-blocks
+discussion-forum,forum-post-code
+code-snippet,code-snippet
+academic-research-code,research-deposit
+code-archive,archived-origin
+model-hub,model-repository
+extension-marketplace,extension-package
